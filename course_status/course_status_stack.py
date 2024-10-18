@@ -99,7 +99,7 @@ class CourseStatusStack(Stack):
         #Creating Lambda function that will be triggered by the SQS Queue
         sqs_lambda = lmda.Function(self, "SqsTriggerHandler",
             function_name = name,                       
-            handler = 'process_messages.lambda_handler',
+            handler = 'process_message.lambda_handler',
             runtime = lmda.Runtime.PYTHON_3_10,
             code = lmda.Code.from_asset('lambda'),
         )
