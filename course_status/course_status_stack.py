@@ -42,7 +42,7 @@ class CourseStatusStack(Stack):
         base_api = apigw.RestApi(self, 
                                  'ApiGW',
                                  rest_api_name = name_prefix + 'API' + name_suffix,
-                                 deployOptions= { "stageName": "coursestatus-"+name_suffix})
+                                 deploy_options = { "stage_name": "coursestatus-" + name_suffix})
         # base_api.root.add_method("ANY")
 
         #Create a resource named "example" on the base API
