@@ -157,7 +157,7 @@ class CourseStatusStack(Stack):
         # Add policy to allow Lambda to interact with SQS
         lambda_execution_role.add_to_policy(iam.PolicyStatement(
             actions=["sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:GetQueueAttributes"],
-            resources=[queue.queueArn]
+            resources=[queue.queue_arn]
         ))
 
         # Allow Lambda to access EC2 resources (if needed for VPC access)
