@@ -25,13 +25,15 @@ class CourseStatusStack(Stack):
                 
         super().__init__(scope, construct_id, **kwargs)
 
-        api_role, lambda_role = self.createRoles()
 
         dlq = self.createDeadLetterQueue(name_prefix + "DLQ" + name_suffix + ".fifo")
 
         queue = self.createFifoQueue(name_prefix + "Queue" + name_suffix + ".fifo", dlq)
+        
+        # Create IAM roles for Lambda and API Gateway
+        api_role, lambda_role = self.createRoles(queue)
 
-        func = self.createLambdaFunction(name_prefix + "Function" + name_suffix, queue)
+        func = self.createLambdaFunction(name_prefix + "Function" + name_suffix, lambda_role, queue)
 
         api = self.createApiGateway(name_prefix + "Gateway" + name_suffix, api_role, queue)
 
@@ -43,9 +45,7 @@ class CourseStatusStack(Stack):
                                  'ApiGW',
                                  rest_api_name = name_prefix + 'API' + name_suffix,
                                  deploy_options = { "stage_name": "coursestatus-" + name_suffix.lower()})
-        # base_api.root.add_method("ANY")
-
-        #Create a resource named "example" on the base API
+        
         api_resource = base_api.root.add_resource('update')
        
         integration_response = apigw.IntegrationResponse(
@@ -106,22 +106,30 @@ class CourseStatusStack(Stack):
 
         return fifo_queue
 
-    def createLambdaFunction(self, name, queue):
+    def createLambdaFunction(self, name, role, queue):
         #Creating Lambda function that will be triggered by the SQS Queue
         sqs_lambda = lmda.Function(self, "SqsTriggerHandler",
             function_name = name,                       
             handler = 'process_message.lambda_handler',
             runtime = lmda.Runtime.PYTHON_3_10,
             code = lmda.Code.from_asset('lambda'),
+            role = role, 
+            environment= {
+                "DB_HOST": "your-db-host",
+                "DB_PORT": "your-db-port",
+                "DB_NAME": "your-db-name",
+                "DB_USER": "your-db-user",
+                "DB_PASSWORD": "your-db-password"
+            }
         )
-
+        
         #Create an SQS event source for Lambda
-        sqs_event_source = lambda_event_source.SqsEventSource(queue)
+        sqs_event_source = lambda_event_source.SqsEventSource(queue, batch_size=1)
 
         #Add SQS event source to the Lambda function
         sqs_lambda.add_event_source(sqs_event_source)
 
-    def createRoles(self):
+    def createRoles(self, queue):
         #Create the API GW service role with permissions to call SQS
         rest_api_role = iam.Role(
             self,
@@ -134,4 +142,28 @@ class CourseStatusStack(Stack):
         # logs:CreateLogGroup, logs:CreateLogStream, logs:PutLogEvents
         # Modify the SQS Queue Policy to allow Lambda to poll messages from the queue
 
-        return (rest_api_role, None)
+        lambda_execution_role = iam.Role(
+            self, name_prefix + "LambdaExecutionRole",
+            role_name = name_prefix + "LambdaRole" + name_suffix, 
+            assumed_by=iam.ServicePrincipal("lambda.amazonaws.com"),
+        )
+
+        # Add policy to allow Lambda to log to CloudWatch
+        lambda_execution_role.add_to_policy(iam.PolicyStatement(
+            actions=["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
+            resources=["*"]
+        ))
+
+        # Add policy to allow Lambda to interact with SQS
+        lambda_execution_role.add_to_policy(iam.PolicyStatement(
+            actions=["sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:GetQueueAttributes"],
+            resources=[queue.queueArn]
+        ))
+
+        # Allow Lambda to access EC2 resources (if needed for VPC access)
+        lambda_execution_role.add_to_policy(iam.PolicyStatement(
+            actions=["ec2:DescribeNetworkInterfaces", "ec2:CreateNetworkInterface", "ec2:DeleteNetworkInterface",
+                     "ec2:DescribeSubnets", "ec2:DescribeSecurityGroups"],
+            resources=["*"]
+        ))
+        return (rest_api_role, lambda_execution_role)
