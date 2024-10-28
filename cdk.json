@@ -71,6 +71,16 @@
     "@aws-cdk/aws-appsync:appSyncGraphQLAPIScopeLambdaPermission": true,
     "@aws-cdk/aws-rds:setCorrectValueForDatabaseInstanceReadReplicaInstanceResourceId": true,
     "@aws-cdk/core:cfnIncludeRejectComplexResourceUpdateCreatePolicyIntrinsics": true,
-    "@aws-cdk/aws-lambda-nodejs:sdkV3ExcludeSmithyPackages": true
+    "@aws-cdk/aws-lambda-nodejs:sdkV3ExcludeSmithyPackages": true,
+    "env": {
+      "staging": {
+        "prefix" : "CourseStatus",
+        "suffix": "Staging"
+      },
+      "production": {
+        "prefix" : "CourseStatus",
+        "suffix": "Prod"
+      }
+    }
   }
 }

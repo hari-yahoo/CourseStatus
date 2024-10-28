@@ -11,12 +11,20 @@ from constructs import Construct
 
 AWS_ACCOUNT_ID = 730335563531
 name_prefix = "CourseStatus"
-name_suffix = "Staging"
+name_suffix = "Default"
 
 class CourseStatusStack(Stack):
 
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
-        super().__init__(scope, construct_id, **kwargs)
+        
+        # Retrieve the environment-specific suffix
+        name_prefix = self.node.try_get_context(f"env.{self.node.try_get_context('CDK_ENV')}.prefix") or "CourseStatus"
+        name_suffix = self.node.try_get_context(f"env.{self.node.try_get_context('CDK_ENV')}.suffix") or "default"
+        
+        # Append the suffix to the stack name
+        super().__init__(scope, f"{construct_id}-{name_suffix}", **kwargs)
+        
+        #super().__init__(scope, construct_id, **kwargs)
 
         api_role, lambda_role = self.createRoles()
 
