@@ -15,15 +15,11 @@ name_suffix = "Staging"
 
 class CourseStatusStack(Stack):
 
-    def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, prefix: str, suffix:str, **kwargs) -> None:
         
-        # Retrieve the environment-specific suffix
-        #name_prefix = self.node.try_get_context(f"env.{self.node.try_get_context('CDK_ENV')}.prefix") or "CourseStatus"
-        #name_suffix = self.node.try_get_context(f"env.{self.node.try_get_context('CDK_ENV')}.suffix") or "default"
-        
-        # Append the suffix to the stack name
-        #super().__init__(scope, f"{construct_id}-{name_suffix}", **kwargs)
-        
+        name_prefix = prefix
+        name_suffix = suffix
+                
         super().__init__(scope, construct_id, **kwargs)
 
         api_role, lambda_role = self.createRoles()

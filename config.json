@@ -1,0 +1,10 @@
+{
+    "staging": {
+        "prefix" : "CourseStatus",
+        "suffix" : "Staging"
+    }, 
+    "production": {
+        "prefix" : "CourseStatus",
+        "suffix" : "Prod"
+    }
+}
