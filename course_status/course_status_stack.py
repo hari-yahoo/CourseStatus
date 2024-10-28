@@ -9,7 +9,6 @@ from aws_cdk import (
 )
 from constructs import Construct
 
-AWS_ACCOUNT_ID = 730335563531
 name_prefix = "CourseStatus"
 name_suffix = "Staging"
 
@@ -17,6 +16,8 @@ class CourseStatusStack(Stack):
 
     def __init__(self, scope: Construct, construct_id: str, prefix: str, suffix:str, **kwargs) -> None:
         
+        global name_prefix, name_suffix
+
         name_prefix = prefix
         name_suffix = suffix
                 

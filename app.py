@@ -6,11 +6,13 @@ import aws_cdk as cdk
 
 from course_status.course_status_stack import CourseStatusStack
 
-parser = argparse.ArgumentParser("app")
-parser.add_argument('-e', '--environment', type=str, help="staging/production", default="staging") 
+choice = input("Deployment envionment [1 for staging, 2 for production]: ")
 
-args = parser.parse_args()
-environment = args.environment
+if choice == 2:
+  environment = "production"
+else:
+  environment = "staging" # default is staging
+
 print("Environment: " + environment)
 
 app = cdk.App()
@@ -19,7 +21,6 @@ try:
   with open('config.json') as config_file:
     settings = json.load(config_file)
 
-  print(settings)
   CourseStatusStack(app, 
                   "CourseStatus-" + settings[environment]["suffix"],
                   settings[environment]["prefix"],
@@ -28,7 +29,7 @@ try:
                 )
 
   app.synth()
-  
+
 except Exception as e:
   print(f"Error reading config file: {e}")
 
