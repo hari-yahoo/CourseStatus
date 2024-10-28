@@ -1,3 +1,5 @@
+import boto3
+
 from aws_cdk import (
     Duration,
     Stack,
@@ -59,10 +61,13 @@ class CourseStatusStack(Stack):
             request_parameters={"integration.request.header.Content-Type": "'application/x-www-form-urlencoded'"},
         )
         
+        sts_client = boto3.client('sts')
+        aws_account_id = sts_client.get_caller_identity().get('Account')
+        
         api_resource_sqs_integration = apigw.AwsIntegration(
             service="sqs",
             integration_http_method="POST",
-            path="{}/{}".format(AWS_ACCOUNT_ID, queue.queue_name),
+            path="{}/{}".format(aws_account_id, queue.queue_name),
             options=api_integration_options
         )
         
